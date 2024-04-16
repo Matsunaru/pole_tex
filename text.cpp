@@ -18,6 +18,7 @@ const int START_Y = 10;
 int cursorPosition = 0;
 char textBox[TEXT_BOX_WIDTH + 1] = {};
 WORD textAttributes[TEXT_BOX_WIDTH] = {};
+int textBoxLength = 0;
 
 void Draw() {
     COORD pos;
@@ -43,7 +44,7 @@ void MoveCursorLeft() {
 }
 
 void MoveCursorRight() {
-    if (cursorPosition < TEXT_BOX_WIDTH - 1) {
+    if (cursorPosition < textBoxLength) {
         cursorPosition++;
     }
 }
@@ -57,10 +58,15 @@ void DrawCursor() {
 }
 
 void InsertChar(char key) {
-    if (cursorPosition < TEXT_BOX_WIDTH - 1) {
+    if (cursorPosition < TEXT_BOX_WIDTH - 1 && textBoxLength < TEXT_BOX_WIDTH - 1) {
+        for (int i = textBoxLength; i > cursorPosition; --i) {
+            textBox[i] = textBox[i - 1];
+            textAttributes[i] = textAttributes[i - 1];
+        }
         textBox[cursorPosition] = key;
         textAttributes[cursorPosition] = FOREGROUND_RED | BACKGROUND_BLUE;
         cursorPosition++;
+        textBoxLength++;
     }
 }
 
@@ -80,13 +86,15 @@ void RefreshTextBox() {
 
 void DeleteChar() {
     if (cursorPosition > 0) {
-        std::move(textBox + cursorPosition, textBox + TEXT_BOX_WIDTH, textBox + cursorPosition - 1);
-        std::move(textAttributes + cursorPosition, textAttributes + TEXT_BOX_WIDTH, textAttributes + cursorPosition - 1);
+        std::move(textBox + cursorPosition, textBox + textBoxLength + 1, textBox + cursorPosition - 1);
+        std::move(textAttributes + cursorPosition, textAttributes + textBoxLength, textAttributes + cursorPosition - 1);
 
         textBox[TEXT_BOX_WIDTH - 1] = ' ';
         textAttributes[TEXT_BOX_WIDTH - 1] = BACKGROUND_BLUE;
 
         cursorPosition--;
+        textBoxLength--;
+
 
         RefreshTextBox();
     }
@@ -94,17 +102,21 @@ void DeleteChar() {
 
 int main()
 {
+
     console = GetStdHandle(STD_OUTPUT_HANDLE);
     Draw();
     DrawCursor();
     while (true) {
         if (_kbhit()) {
             char key = _getch();
-            if (key == 75) {
-                MoveCursorLeft();
-            }
-            else if (key == 77) {
-                MoveCursorRight();
+            if (key == -32) {
+                key = _getch();
+                if (key == 75) {
+                    MoveCursorLeft();
+                }
+                else if (key == 77) {
+                    MoveCursorRight();
+                }
             }
             else if ((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z')) {
                 InsertChar(key);
@@ -112,7 +124,7 @@ int main()
             }
             else if (key == 8) {
                 DeleteChar();
-                
+
 
             }
 
