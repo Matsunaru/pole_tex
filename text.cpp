@@ -71,8 +71,8 @@ int main()
             COORD pos;
             pos.X = START_X + cursorPosition;
             pos.Y = START_Y;
-            SetConsoleCursorPosition(console, pos);
-            std::cout << 'X';
+            SetConsoleTextAttribute(console, FOREGROUND_RED);
+            std::cout << key;
             MoveCursorRight();
         }
         DrawCursor(); 
